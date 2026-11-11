@@ -1,124 +1,166 @@
+```html
 <!DOCTYPE html>
 <html lang="es">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800;900&display=swap" rel="stylesheet">
-
 <style>
-* {
-  box-sizing: border-box;
-}
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800;900&display=swap');
 
 html, body {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  background: transparent !important;
-  font-family: 'Montserrat', sans-serif;
+  margin:0;
+  padding:0;
+  background:transparent !important;
 }
 
 #rr-widget {
-  display: inline-block;
-  width: 100%;
-  max-width: 850px;
-  color: white;
-  background: transparent;
+  font-family:Montserrat,sans-serif;
+  color:#fff;
+  width:100%;
+  max-width:850px;
+  margin:auto;
+  background:transparent;
 }
 
-.panel {
-  background: transparent;
-  border: none;
-  padding: 10px;
+#rr-widget * {
+  box-sizing:border-box;
 }
 
-.header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  margin-bottom: 12px;
-  gap: 10px;
+#rr-widget .panel {
+  background:rgba(16,21,29,0.88);
+  border:2px solid #e00020;
+  border-left:6px solid #ff102f;
+  border-radius:12px;
+  padding:22px;
+  box-shadow:0 0 14px rgba(255,0,35,.22);
 }
 
-.brand {
-  font-size: 15px;
-  font-weight: 900;
-  letter-spacing: 2px;
-  color: white;
-  text-shadow: 0 2px 5px black;
+#rr-widget .header {
+  display:flex;
+  justify-content:space-between;
+  align-items:center;
+  margin-bottom:20px;
+  gap:10px;
 }
 
-.nick {
-  color: #ff1738;
-  font-size: 22px;
-  margin-top: 5px;
-  font-weight: 900;
-  letter-spacing: 2px;
-  text-transform: uppercase;
-  text-shadow: 0 0 10px rgba(255,0,35,.7),
-               0 2px 5px black;
+#rr-widget .brand {
+  font-size:17px;
+  font-weight:900;
+  letter-spacing:2px;
 }
 
-.live {
-  font-size: 10px;
-  color: #69dc91;
-  font-weight: 900;
-  text-shadow: 0 2px 5px black;
+#rr-widget .nick {
+  color:#ff1738;
+  font-size:20px;
+  margin-top:7px;
+  font-weight:900;
+  letter-spacing:2px;
+  text-transform:uppercase;
+  text-shadow:0 0 10px rgba(255,0,35,.4);
 }
 
-.stats {
-  display: grid;
-  grid-template-columns: repeat(3,minmax(0,1fr));
-  gap: 10px;
+#rr-widget .live {
+  font-size:10px;
+  color:#69dc91;
+  font-weight:800;
+  white-space:nowrap;
 }
 
-.stat {
-  background: rgba(10,10,10,.35);
-  border: 2px solid #ff1738;
-  border-radius: 7px;
-  padding: 12px 6px;
-  text-align: center;
-  box-shadow: 0 0 10px rgba(255,0,35,.25);
+#rr-widget .stats {
+  display:grid;
+  grid-template-columns:repeat(3,minmax(0,1fr));
+  gap:12px;
 }
 
-.label {
-  color: white;
-  font-size: 10px;
-  font-weight: 900;
-  letter-spacing: 1.2px;
-  text-shadow: 0 2px 4px black;
+#rr-widget .stat {
+  background:rgba(255,0,35,.045);
+  border:1px solid rgba(255,0,35,.45);
+  padding:16px 8px;
+  border-radius:8px;
+  text-align:center;
+  min-width:0;
 }
 
-.number {
-  font-size: clamp(21px,4vw,34px);
-  font-weight: 900;
-  margin-top: 7px;
-  color: white;
-  text-shadow: 0 2px 5px black;
-  white-space: nowrap;
-  overflow: hidden;
+#rr-widget .label {
+  color:#aab5c3;
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:1.3px;
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  flex-wrap:wrap;
+  gap:6px;
 }
 
-.gold {
-  color: #ff1738;
+#rr-widget .delta {
+  font-size:11px;
+  font-weight:900;
+  letter-spacing:0;
+  white-space:nowrap;
 }
 
-.footer {
-  display: flex;
-  justify-content: space-between;
-  margin-top: 8px;
-  color: white;
-  font-size: 9px;
-  text-shadow: 0 2px 4px black;
-  gap: 8px;
+#rr-widget .delta.up {
+  color:#36e477;
+  text-shadow:0 0 7px rgba(54,228,119,.3);
+}
+
+#rr-widget .delta.down {
+  color:#ff304b;
+  text-shadow:0 0 7px rgba(255,48,75,.3);
+}
+
+#rr-widget .delta.neutral {
+  color:#8793a3;
+}
+
+#rr-widget .number {
+  font-size:clamp(21px,4vw,34px);
+  font-weight:900;
+  margin-top:9px;
+  white-space:nowrap;
+  overflow:hidden;
+}
+
+#rr-widget .gold {
+  color:#ff1738;
+}
+
+#rr-widget .footer {
+  display:flex;
+  justify-content:space-between;
+  margin-top:14px;
+  color:#8793a3;
+  font-size:9px;
+  gap:8px;
 }
 
 @media(max-width:480px) {
-  .stats { gap: 5px; }
-  .stat { padding: 10px 3px; }
-  .label { font-size: 8px; }
-  .nick { font-size: 18px; }
+  #rr-widget .panel {
+    padding:13px;
+  }
+
+  #rr-widget .stats {
+    gap:6px;
+  }
+
+  #rr-widget .stat {
+    padding:13px 4px;
+  }
+
+  #rr-widget .label {
+    font-size:8px;
+    gap:3px;
+  }
+
+  #rr-widget .delta {
+    font-size:9px;
+  }
+
+  #rr-widget .nick {
+    font-size:17px;
+  }
 }
 </style>
 </head>
@@ -131,26 +173,37 @@ html, body {
     <div class="header">
       <div>
         <div class="brand">RACEROOM RANKED</div>
-        <div class="nick" id="rr-name">URILOKI</div>
+        <div class="nick" id="rr-name">ORIOL BALMAÑA</div>
       </div>
       <div class="live">● LIVE</div>
     </div>
 
     <div class="stats">
+
       <div class="stat">
-        <div class="label">RATING</div>
+        <div class="label">
+          RATING
+          <span class="delta neutral" id="rr-rating-delta">—</span>
+        </div>
         <div class="number gold" id="rr-rating">---</div>
       </div>
 
       <div class="stat">
-        <div class="label">REPUTACIÓN</div>
+        <div class="label">
+          REPUTACIÓN
+          <span class="delta neutral" id="rr-rep-delta">—</span>
+        </div>
         <div class="number" id="rr-rep">---</div>
       </div>
 
       <div class="stat">
-        <div class="label">GLOBAL</div>
+        <div class="label">
+          GLOBAL
+          <span class="delta neutral" id="rr-position-delta">—</span>
+        </div>
         <div class="number" id="rr-position">---</div>
       </div>
+
     </div>
 
     <div class="footer">
@@ -165,10 +218,14 @@ html, body {
 (() => {
 
   const PILOT_NICK = "uriloki";
+  const DISPLAY_NAME = "Oriol Balmaña";
+
   const API = "https://game.raceroom.com/multiplayer-rating/ratings.json";
   const INTERVAL = 60000;
 
   const $ = id => document.getElementById(id);
+
+  let previousStats = null;
 
   const normalize = s => String(s ?? "")
     .normalize("NFD")
@@ -182,9 +239,13 @@ html, body {
     if (!obj || typeof obj !== "object") return null;
 
     for (const [key,value] of Object.entries(obj)) {
-      if (aliases.includes(cleanKey(key)) &&
-          value !== null && value !== "") return value;
+      if (
+        aliases.includes(cleanKey(key)) &&
+        value !== null &&
+        value !== ""
+      ) return value;
     }
+
     return null;
   }
 
@@ -195,6 +256,7 @@ html, body {
       const n = Number(value.replace(",","."));
       return Number.isFinite(n) ? n : null;
     }
+
     return null;
   }
 
@@ -208,7 +270,8 @@ html, body {
     ];
 
     const ratingKeys = [
-      "rating","rankedrating","mprating","elo","skillrating"
+      "rating","rankedrating","mprating",
+      "elo","skillrating"
     ];
 
     const repKeys = [
@@ -222,8 +285,12 @@ html, body {
     ];
 
     function walk(node,depth) {
-      if (!node || typeof node !== "object" ||
-          depth > 12 || visited.has(node)) return;
+      if (
+        !node ||
+        typeof node !== "object" ||
+        depth > 12 ||
+        visited.has(node)
+      ) return;
 
       visited.add(node);
 
@@ -247,39 +314,79 @@ html, body {
       }
 
       Object.values(node).forEach(x => {
-        if (x && typeof x === "object") walk(x,depth+1);
+        if (x && typeof x === "object") {
+          walk(x,depth+1);
+        }
       });
     }
 
     walk(data,0);
+
     return result;
   }
 
+  function updateDelta(elementId,current,previous,inverse=false) {
+
+    const element = $(elementId);
+
+    if (current == null || previous == null) {
+      element.textContent = "—";
+      element.className = "delta neutral";
+      return;
+    }
+
+    const difference = inverse
+      ? previous-current
+      : current-previous;
+
+    if (difference === 0) {
+      element.textContent = "—";
+      element.className = "delta neutral";
+      return;
+    }
+
+    const improved = difference > 0;
+
+    element.textContent =
+      (improved ? "+" : "−") +
+      Math.abs(difference).toLocaleString("es-ES");
+
+    element.className =
+      "delta " + (improved ? "up" : "down");
+  }
+
   async function update() {
+
     try {
+
       const response = await fetch(
         API + "?t=" + Date.now(),
         {cache:"no-store"}
       );
 
-      if (!response.ok) throw new Error("HTTP " + response.status);
+      if (!response.ok) {
+        throw new Error("HTTP " + response.status);
+      }
 
       const data = await response.json();
       const players = findPlayers(data);
 
-      if (!players.length)
-        throw new Error("JSON no reconocido");
+      if (!players.length) {
+        throw new Error("Estructura JSON no reconocida");
+      }
 
       const pilot = players.find(
         p => normalize(p.name) === normalize(PILOT_NICK)
       );
 
-      if (!pilot)
-        throw new Error("Piloto no encontrado");
+      if (!pilot) {
+        throw new Error("Piloto URILOKI no encontrado");
+      }
 
       let position = pilot.pos;
 
       if (position == null) {
+
         const sorted = [...players].sort(
           (a,b) => b.rating-a.rating
         );
@@ -289,25 +396,62 @@ html, body {
         ) + 1;
       }
 
-      $("rr-name").textContent = pilot.name;
+      $("rr-name").textContent = DISPLAY_NAME;
+
       $("rr-rating").textContent =
         pilot.rating.toLocaleString("es-ES");
+
       $("rr-rep").textContent =
         pilot.rep.toLocaleString("es-ES");
+
       $("rr-position").textContent =
         position > 0 ? "#" + position : "---";
 
+      if (previousStats !== null) {
+
+        updateDelta(
+          "rr-rating-delta",
+          pilot.rating,
+          previousStats.rating
+        );
+
+        updateDelta(
+          "rr-rep-delta",
+          pilot.rep,
+          previousStats.rep
+        );
+
+        updateDelta(
+          "rr-position-delta",
+          position > 0 ? position : null,
+          previousStats.position,
+          true
+        );
+
+      }
+
+      previousStats = {
+        rating:pilot.rating,
+        rep:pilot.rep,
+        position:position > 0 ? position : null
+      };
+
       $("rr-status").textContent = "Datos actualizados";
+
       $("rr-time").textContent =
         new Date().toLocaleTimeString("es-ES");
 
     } catch(error) {
+
       console.error("RaceRoom:",error);
-      $("rr-status").textContent = "Error de conexión / CORS";
+
+      $("rr-status").textContent =
+        "Error de conexión / CORS";
     }
   }
 
   update();
+
   setInterval(update,INTERVAL);
 
 })();
@@ -315,3 +459,4 @@ html, body {
 
 </body>
 </html>
+```
