@@ -1,0 +1,317 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500;600;700;800;900&display=swap" rel="stylesheet">
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+html, body {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  background: transparent !important;
+  font-family: 'Montserrat', sans-serif;
+}
+
+#rr-widget {
+  display: inline-block;
+  width: 100%;
+  max-width: 850px;
+  color: white;
+  background: transparent;
+}
+
+.panel {
+  background: transparent;
+  border: none;
+  padding: 10px;
+}
+
+.header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  gap: 10px;
+}
+
+.brand {
+  font-size: 15px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  color: white;
+  text-shadow: 0 2px 5px black;
+}
+
+.nick {
+  color: #ff1738;
+  font-size: 22px;
+  margin-top: 5px;
+  font-weight: 900;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-shadow: 0 0 10px rgba(255,0,35,.7),
+               0 2px 5px black;
+}
+
+.live {
+  font-size: 10px;
+  color: #69dc91;
+  font-weight: 900;
+  text-shadow: 0 2px 5px black;
+}
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(3,minmax(0,1fr));
+  gap: 10px;
+}
+
+.stat {
+  background: rgba(10,10,10,.35);
+  border: 2px solid #ff1738;
+  border-radius: 7px;
+  padding: 12px 6px;
+  text-align: center;
+  box-shadow: 0 0 10px rgba(255,0,35,.25);
+}
+
+.label {
+  color: white;
+  font-size: 10px;
+  font-weight: 900;
+  letter-spacing: 1.2px;
+  text-shadow: 0 2px 4px black;
+}
+
+.number {
+  font-size: clamp(21px,4vw,34px);
+  font-weight: 900;
+  margin-top: 7px;
+  color: white;
+  text-shadow: 0 2px 5px black;
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.gold {
+  color: #ff1738;
+}
+
+.footer {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 8px;
+  color: white;
+  font-size: 9px;
+  text-shadow: 0 2px 4px black;
+  gap: 8px;
+}
+
+@media(max-width:480px) {
+  .stats { gap: 5px; }
+  .stat { padding: 10px 3px; }
+  .label { font-size: 8px; }
+  .nick { font-size: 18px; }
+}
+</style>
+</head>
+
+<body>
+
+<div id="rr-widget">
+  <div class="panel">
+
+    <div class="header">
+      <div>
+        <div class="brand">RACEROOM RANKED</div>
+        <div class="nick" id="rr-name">URILOKI</div>
+      </div>
+      <div class="live">● LIVE</div>
+    </div>
+
+    <div class="stats">
+      <div class="stat">
+        <div class="label">RATING</div>
+        <div class="number gold" id="rr-rating">---</div>
+      </div>
+
+      <div class="stat">
+        <div class="label">REPUTACIÓN</div>
+        <div class="number" id="rr-rep">---</div>
+      </div>
+
+      <div class="stat">
+        <div class="label">GLOBAL</div>
+        <div class="number" id="rr-position">---</div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <span id="rr-status">Conectando...</span>
+      <span id="rr-time">--:--:--</span>
+    </div>
+
+  </div>
+</div>
+
+<script>
+(() => {
+
+  const PILOT_NICK = "uriloki";
+  const API = "https://game.raceroom.com/multiplayer-rating/ratings.json";
+  const INTERVAL = 60000;
+
+  const $ = id => document.getElementById(id);
+
+  const normalize = s => String(s ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g,"")
+    .toLowerCase().trim();
+
+  const cleanKey = s =>
+    normalize(s).replace(/[^a-z0-9]/g,"");
+
+  function getField(obj, aliases) {
+    if (!obj || typeof obj !== "object") return null;
+
+    for (const [key,value] of Object.entries(obj)) {
+      if (aliases.includes(cleanKey(key)) &&
+          value !== null && value !== "") return value;
+    }
+    return null;
+  }
+
+  function num(value) {
+    if (typeof value === "number") return value;
+
+    if (typeof value === "string") {
+      const n = Number(value.replace(",","."));
+      return Number.isFinite(n) ? n : null;
+    }
+    return null;
+  }
+
+  function findPlayers(data) {
+    const result = [];
+    const visited = new WeakSet();
+
+    const nameKeys = [
+      "name","username","playername","drivername",
+      "nickname","displayname","fullname"
+    ];
+
+    const ratingKeys = [
+      "rating","rankedrating","mprating","elo","skillrating"
+    ];
+
+    const repKeys = [
+      "reputation","rep","rankedreputation",
+      "mpreputation","safetyrating"
+    ];
+
+    const posKeys = [
+      "position","globalposition","globalrank",
+      "worldrank","rank","place"
+    ];
+
+    function walk(node,depth) {
+      if (!node || typeof node !== "object" ||
+          depth > 12 || visited.has(node)) return;
+
+      visited.add(node);
+
+      if (Array.isArray(node)) {
+        node.forEach(x => walk(x,depth+1));
+        return;
+      }
+
+      const name = getField(node,nameKeys);
+      const rating = num(getField(node,ratingKeys));
+      const rep = num(getField(node,repKeys));
+      const pos = num(getField(node,posKeys));
+
+      if (name != null && rating != null && rep != null) {
+        result.push({
+          name:String(name),
+          rating,
+          rep,
+          pos
+        });
+      }
+
+      Object.values(node).forEach(x => {
+        if (x && typeof x === "object") walk(x,depth+1);
+      });
+    }
+
+    walk(data,0);
+    return result;
+  }
+
+  async function update() {
+    try {
+      const response = await fetch(
+        API + "?t=" + Date.now(),
+        {cache:"no-store"}
+      );
+
+      if (!response.ok) throw new Error("HTTP " + response.status);
+
+      const data = await response.json();
+      const players = findPlayers(data);
+
+      if (!players.length)
+        throw new Error("JSON no reconocido");
+
+      const pilot = players.find(
+        p => normalize(p.name) === normalize(PILOT_NICK)
+      );
+
+      if (!pilot)
+        throw new Error("Piloto no encontrado");
+
+      let position = pilot.pos;
+
+      if (position == null) {
+        const sorted = [...players].sort(
+          (a,b) => b.rating-a.rating
+        );
+
+        position = sorted.findIndex(
+          p => normalize(p.name) === normalize(pilot.name)
+        ) + 1;
+      }
+
+      $("rr-name").textContent = pilot.name;
+      $("rr-rating").textContent =
+        pilot.rating.toLocaleString("es-ES");
+      $("rr-rep").textContent =
+        pilot.rep.toLocaleString("es-ES");
+      $("rr-position").textContent =
+        position > 0 ? "#" + position : "---";
+
+      $("rr-status").textContent = "Datos actualizados";
+      $("rr-time").textContent =
+        new Date().toLocaleTimeString("es-ES");
+
+    } catch(error) {
+      console.error("RaceRoom:",error);
+      $("rr-status").textContent = "Error de conexión / CORS";
+    }
+  }
+
+  update();
+  setInterval(update,INTERVAL);
+
+})();
+</script>
+
+</body>
+</html>
