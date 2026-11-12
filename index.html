@@ -139,4 +139,342 @@ html, body {
 }
 
 @media(max-width:480px) {
-  #rr-widget .
+  #rr-widget .panel {
+    padding: 13px;
+  }
+
+  #rr-widget .stats {
+    gap: 6px;
+  }
+
+  #rr-widget .stat {
+    padding: 13px 4px;
+  }
+
+  #rr-widget .label {
+    font-size: 8px;
+    gap: 3px;
+  }
+
+  #rr-widget .delta {
+    font-size: 9px;
+  }
+
+  #rr-widget .nick {
+    font-size: 17px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div id="rr-widget">
+
+  <div class="panel">
+
+    <div class="header">
+      <div>
+        <div class="brand">RACEROOM RANKED</div>
+        <div class="nick" id="rr-name">ORIOL BALMAÑA</div>
+      </div>
+
+      <div class="live">● LIVE</div>
+    </div>
+
+    <div class="stats">
+
+      <div class="stat">
+        <div class="label">
+          RATING
+          <span class="delta neutral" id="rr-rating-delta">—</span>
+        </div>
+        <div class="number gold" id="rr-rating">---</div>
+      </div>
+
+      <div class="stat">
+        <div class="label">
+          REPUTACIÓN
+          <span class="delta neutral" id="rr-rep-delta">—</span>
+        </div>
+        <div class="number" id="rr-rep">---</div>
+      </div>
+
+      <div class="stat">
+        <div class="label">
+          GLOBAL
+          <span class="delta neutral" id="rr-position-delta">—</span>
+        </div>
+        <div class="number" id="rr-position">---</div>
+      </div>
+
+    </div>
+
+    <div class="footer">
+      <span id="rr-status">Conectando...</span>
+      <span id="rr-time">--:--:--</span>
+    </div>
+
+  </div>
+
+</div>
+
+<script>
+(() => {
+
+  const PILOT_NICK = "uriloki";
+  const DISPLAY_NAME = "Oriol Balmaña";
+
+  const API = "https://game.raceroom.com/multiplayer-rating/ratings.json";
+  const INTERVAL = 60000;
+
+  const $ = id => document.getElementById(id);
+
+  // Valores de la actualización anterior
+  let previousStats = null;
+
+  const normalize = s => String(s ?? "")
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g,"")
+    .toLowerCase()
+    .trim();
+
+  const cleanKey = s =>
+    normalize(s).replace(/[^a-z0-9]/g,"");
+
+  function getField(obj, aliases) {
+    if (!obj || typeof obj !== "object") return null;
+
+    for (const [key,value] of Object.entries(obj)) {
+      if (
+        aliases.includes(cleanKey(key)) &&
+        value !== null &&
+        value !== ""
+      ) return value;
+    }
+
+    return null;
+  }
+
+  function num(value) {
+    if (typeof value === "number") return value;
+
+    if (typeof value === "string") {
+      const n = Number(value.replace(",","."));
+      return Number.isFinite(n) ? n : null;
+    }
+
+    return null;
+  }
+
+  function findPlayers(data) {
+
+    const result = [];
+    const visited = new WeakSet();
+
+    const nameKeys = [
+      "name","username","playername","drivername",
+      "nickname","displayname","fullname"
+    ];
+
+    const ratingKeys = [
+      "rating","rankedrating","mprating",
+      "elo","skillrating"
+    ];
+
+    const repKeys = [
+      "reputation","rep","rankedreputation",
+      "mpreputation","safetyrating"
+    ];
+
+    const posKeys = [
+      "position","globalposition","globalrank",
+      "worldrank","rank","place"
+    ];
+
+    function walk(node,depth) {
+
+      if (
+        !node ||
+        typeof node !== "object" ||
+        depth > 12 ||
+        visited.has(node)
+      ) return;
+
+      visited.add(node);
+
+      if (Array.isArray(node)) {
+        node.forEach(x => walk(x,depth+1));
+        return;
+      }
+
+      const name = getField(node,nameKeys);
+      const rating = num(getField(node,ratingKeys));
+      const rep = num(getField(node,repKeys));
+      const pos = num(getField(node,posKeys));
+
+      if (name != null && rating != null && rep != null) {
+        result.push({
+          name: String(name),
+          rating,
+          rep,
+          pos
+        });
+      }
+
+      Object.values(node).forEach(x => {
+        if (x && typeof x === "object") {
+          walk(x,depth+1);
+        }
+      });
+    }
+
+    walk(data,0);
+
+    return result;
+  }
+
+  // Diferencial entre actualización actual y anterior
+  function updateDelta(elementId,current,previous,inverse=false) {
+
+    const element = $(elementId);
+
+    if (current == null || previous == null) {
+      element.textContent = "—";
+      element.className = "delta neutral";
+      return;
+    }
+
+    // En GLOBAL, bajar de puesto es positivo
+    const difference = inverse
+      ? previous-current
+      : current-previous;
+
+    if (difference === 0) {
+      element.textContent = "—";
+      element.className = "delta neutral";
+      return;
+    }
+
+    const improved = difference > 0;
+
+    element.textContent =
+      (improved ? "+" : "−") +
+      Math.abs(difference).toLocaleString("es-ES");
+
+    element.className =
+      "delta " + (improved ? "up" : "down");
+  }
+
+  async function update() {
+
+    try {
+
+      const response = await fetch(
+        API + "?t=" + Date.now(),
+        {cache:"no-store"}
+      );
+
+      if (!response.ok) {
+        throw new Error("HTTP " + response.status);
+      }
+
+      const data = await response.json();
+      const players = findPlayers(data);
+
+      if (!players.length) {
+        throw new Error("Estructura JSON no reconocida");
+      }
+
+      const pilot = players.find(
+        p => normalize(p.name) === normalize(PILOT_NICK)
+      );
+
+      if (!pilot) {
+        throw new Error("Piloto URILOKI no encontrado");
+      }
+
+      let position = pilot.pos;
+
+      if (position == null) {
+
+        const sorted = [...players].sort(
+          (a,b) => b.rating-a.rating
+        );
+
+        position = sorted.findIndex(
+          p => normalize(p.name) === normalize(pilot.name)
+        ) + 1;
+      }
+
+      // Nombre
+      $("rr-name").textContent = DISPLAY_NAME;
+
+      // Estadísticas actuales
+      $("rr-rating").textContent =
+        pilot.rating.toLocaleString("es-ES");
+
+      $("rr-rep").textContent =
+        pilot.rep.toLocaleString("es-ES");
+
+      $("rr-position").textContent =
+        position > 0 ? "#" + position : "---";
+
+      // Diferenciales
+      if (previousStats !== null) {
+
+        updateDelta(
+          "rr-rating-delta",
+          pilot.rating,
+          previousStats.rating
+        );
+
+        updateDelta(
+          "rr-rep-delta",
+          pilot.rep,
+          previousStats.rep
+        );
+
+        updateDelta(
+          "rr-position-delta",
+          position > 0 ? position : null,
+          previousStats.position,
+          true
+        );
+
+      }
+
+      // Guardar referencia para la siguiente actualización
+      previousStats = {
+        rating: pilot.rating,
+        rep: pilot.rep,
+        position: position > 0 ? position : null
+      };
+
+      $("rr-status").textContent = "Datos actualizados";
+
+      $("rr-time").textContent =
+        new Date().toLocaleTimeString("es-ES");
+
+    } catch(error) {
+
+      console.error("RaceRoom:",error);
+
+      $("rr-status").textContent =
+        "Error de conexión / CORS";
+
+    }
+  }
+
+  // Primera actualización
+  update();
+
+  // Actualización cada 60 segundos
+  setInterval(update,INTERVAL);
+
+})();
+</script>
+
+</body>
+</html>
+```
